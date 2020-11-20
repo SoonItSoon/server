@@ -1,3 +1,8 @@
+# 실험 파일 일단 올리지 말기
+research
+# 로그 파일 올리지 말기
+nohup.out
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
