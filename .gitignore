@@ -3,7 +3,7 @@ research
 # 로그 파일 올리지 말기
 nohup.out
 # 크롬 드라이버 올리지 말기
-chromedriver
+# chromedriver
 chromedriver.exe
 
 # Byte-compiled / optimized / DLL files
