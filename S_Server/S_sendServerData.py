@@ -37,9 +37,9 @@ def search():
         for req_level in req_levels:
             levels.append(levelDict[disaster][int(req_level)])
         if inner_text:
-            log = f"[S_sendServerData] 재난 : {disaster} {name} {levels}\n날짜 : {start_date}~{end_date}\n위치 : {main_location} {sub_location}\n검색 : {inner_text}"
+            log = f"[S_sendServerData]<br>재난 : {disaster} {name} {levels}<br>날짜 : {start_date} ~ {end_date}<br>위치 : {main_location} {sub_location}<br>검색 : {inner_text}"
         else:
-            log = f"[S_sendServerData] 재난 : {disaster} {name} {levels}\n날짜 : {start_date}~{end_date}\n위치 : {main_location} {sub_location}\n검색 없음"
+            log = f"[S_sendServerData]<br>재난 : {disaster} {name} {levels}<br>날짜 : {start_date} ~ {end_date}<br>위치 : {main_location} {sub_location}<br>검색 없음"
     # 지진
     elif disaster == 2:
 
