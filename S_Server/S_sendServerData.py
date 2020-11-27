@@ -39,32 +39,31 @@ def search():
             print(f"[S_sendServerData]{disaster} {name} {req_level}/{start_date}~{end_date}/{main_location} {sub_location}/{inner_text}")
         else:
             print(f"[S_sendServerData]{disaster} {name} {req_level}/{start_date}~{end_date}/{main_location} {sub_location}")
-        
-        return render_template("home.html")
     # 지진
     elif disaster == 2:
-        return render_template("home.html")
+        print("지진")
     # 미세먼지
     elif disaster == 3:
-        return render_template("home.html")
+        print("미세먼지")
     # 태풍
     elif disaster == 4:
-        return render_template("home.html")
+        print("태풍")
     # 홍수
     elif disaster == 5:
-        return render_template("home.html")
+        print("홍수")
     # 폭염
     elif disaster == 6:
-        return render_template("home.html")
+        print("폭염")
     # 한파
     elif disaster == 7:
-        return render_template("home.html")
+        print("한파")
     # 호우
     elif disaster == 8:
-        return render_template("home.html")
+        print("호우")
     # 대설
     else:
-        return render_template("home.html")
+        print("대설")
+    return render_template("home.html")
 
 
 
