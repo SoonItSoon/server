@@ -30,13 +30,12 @@ def search():
     inner_text = request.args.get("inner_text")
 
     levels = []
-        for req_level in req_levels:
-            levels.append(levelDict[disaster][int(req_level)])
+    for req_level in req_levels:
+        levels.append(levelDict[disaster][int(req_level)])
     log = ""
     # 전염병
     if disaster == 1:
         name = request.args.get("name")
-        req_levels = level.split(",")
         if inner_text:
             log = {"재난": f"전염병 {name} {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}", "텍스트 검색": "{inner_text}"}
         else:
@@ -48,9 +47,9 @@ def search():
         obs_location = request.args.get("obs_location")
         if inner_text:
             if obs_location:
-                log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 {obs_location}에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}", "텍스트 검색": "{inner_text}"}
+                log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 {obs_location}에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}", "텍스트 검색": f"{inner_text}"}
             else:
-                log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 전국에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}", "텍스트 검색": "{inner_text}"}
+                log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 전국에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}", "텍스트 검색": f"{inner_text}"}
         else:
             if obs_location:
                 log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 {obs_location}에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}"}
