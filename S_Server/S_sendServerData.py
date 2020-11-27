@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request
+import json
 
 app = Flask("Hello World!")
 
@@ -28,22 +29,33 @@ def search():
     level = request.args.get("level")
     inner_text = request.args.get("inner_text")
 
+    levels = []
+        for req_level in req_levels:
+            levels.append(levelDict[disaster][int(req_level)])
     log = ""
     # 전염병
     if disaster == 1:
         name = request.args.get("name")
         req_levels = level.split(",")
-        levels = []
-        for req_level in req_levels:
-            levels.append(levelDict[disaster][int(req_level)])
         if inner_text:
-            log = f"[S_sendServerData]<br>재난 : {disaster} {name} {levels}<br>날짜 : {start_date} ~ {end_date}<br>위치 : {main_location} {sub_location}<br>검색 : {inner_text}"
+            log = {"재난": f"전염병 {name} {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}", "텍스트 검색": "{inner_text}"}
         else:
-            log = f"[S_sendServerData]<br>재난 : {disaster} {name} {levels}<br>날짜 : {start_date} ~ {end_date}<br>위치 : {main_location} {sub_location}<br>검색 없음"
+            log = {"재난": f"전염병 {name} {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}"}
     # 지진
     elif disaster == 2:
-
-        print("지진")
+        scale_min = float(request.args.get("scale_min"))
+        scale_max = float(request.args.get("scale_max"))
+        obs_location = request.args.get("obs_location")
+        if inner_text:
+            if obs_location:
+                log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 {obs_location}에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}", "텍스트 검색": "{inner_text}"}
+            else:
+                log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 전국에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}", "텍스트 검색": "{inner_text}"}
+        else:
+            if obs_location:
+                log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 {obs_location}에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}"}
+            else:
+                log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 전국에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}"}
     # 미세먼지
     elif disaster == 3:
         print("미세먼지")
@@ -66,7 +78,9 @@ def search():
     # 대설
     else:
         print("대설")
-    return render_template("search.html", log_data=log)
+    
+    print(log)
+    return render_template("search.html", log_data=json.dumps(log, ensure_ascii=False))
 
 
 
