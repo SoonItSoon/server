@@ -1,7 +1,17 @@
 from flask import Flask, render_template, request
 import json
+import pymysql
 
 app = Flask("Hello World!")
+
+ testDB = pymysql.connect(
+     user='kyeol',
+     passwd='hee',
+     host='127.0.0.1',
+     db='AlertMsgDB',
+     charset='utf8'
+)
+cursor = testDB.cursor(pymysql.cursors.DictCursor)
 
 levelDict = {1: {1: "접촉안내", 2: "동선공개", 3: "발생안내", 9: "캠페인"},
                 2: {1: "지진", 9: "기타"},
@@ -78,8 +88,13 @@ def search():
     else:
         print("대설")
     
+    sql = f"SELECT * FROM alertMsg WHERE date >= {start_date} and date <= {end_date};"
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    jsonAll = dict(zip(range(1, len(result) + 1), result))
+
     print(log)
-    return render_template("search.html", log_data=json.dumps(log, ensure_ascii=False))
+    return render_template("search.html", log_data=json.dumps(log, ensure_ascii=False), db_data=json.dumps(jsonAll, ensure_ascii=False))
 
 
 
