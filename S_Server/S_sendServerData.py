@@ -26,7 +26,7 @@ def search():
     main_location = request.args.get("main_location")
     sub_location = request.args.get("sub_location")
     disaster = int(request.args.get("disaster"))
-    level = request.args.get("level")
+    req_levels = request.args.get("level").split(",")
     inner_text = request.args.get("inner_text")
 
     levels = []
