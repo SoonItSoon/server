@@ -2,15 +2,15 @@ from flask import Flask, render_template, request
 
 app = Flask("Hello World!")
 
-levelDict = {1: {"1": "접촉안내", "2": "동선공개", "3": "발생안내", "9": "캠페인"},
-                2: {"1": "지진", "9": "기타"},
-                3: {"1": "경보", "2": "주의보", "9": "저감조치"},
-                4: {"1": "경보", "2": "주의보", "9": "조치조치"},
-                5: {"1": "경보", "2": "주의보", "9": "조치알림"},
-                6: {"1": "경보", "2": "주의보", "9": "기타"},
-                7: {"1": "경보", "2": "주의보", "9": "기타"},
-                8: {"1": "경보", "2": "주의보", "9": "기타"},
-                9: {"1": "경보", "2": "주의보", "9": "기타"}}
+levelDict = {1: {1: "접촉안내", 2: "동선공개", 3: "발생안내", 9: "캠페인"},
+                2: {1: "지진", 9: "기타"},
+                3: {1: "경보", 2: "주의보", 9: "저감조치"},
+                4: {1: "경보", 2: "주의보", 9: "조치조치"},
+                5: {1: "경보", 2: "주의보", 9: "조치알림"},
+                6: {1: "경보", 2: "주의보", 9: "기타"},
+                7: {1: "경보", 2: "주의보", 9: "기타"},
+                8: {1: "경보", 2: "주의보", 9: "기타"},
+                9: {1: "경보", 2: "주의보", 9: "기타"}}
 
 @app.route("/")
 def home():
@@ -24,21 +24,22 @@ def search():
     end_date = request.args.get("end_date")
     main_location = request.args.get("main_location")
     sub_location = request.args.get("sub_location")
-    disaster = request.args.get("disaster")
+    disaster = int(request.args.get("disaster"))
     level = request.args.get("level")
     inner_text = request.args.get("inner_text")
+    print(f"{start_date}, {end_date}, {main_location}, {sub_location}, {disaster}, {level}, {inner_text}")
 
     # 전염병
     if disaster == 1:
         name = request.args.get("name")
-        levels = level.split(",")
-        req_level = []
-        for level in levels:
-            req_level.append(levelDict[level])
+        req_levels = level.split(",")
+        levels = []
+        for req_level in req_levels:
+            levels.append(levelDict[disaster][int(req_level)])
         if inner_text:
-            print(f"[S_sendServerData]{disaster} {name} {req_level}/{start_date}~{end_date}/{main_location} {sub_location}/{inner_text}")
+            print(f"[S_sendServerData]{disaster} {name} {levels}/{start_date}~{end_date}/{main_location} {sub_location}/{inner_text}")
         else:
-            print(f"[S_sendServerData]{disaster} {name} {req_level}/{start_date}~{end_date}/{main_location} {sub_location}")
+            print(f"[S_sendServerData]{disaster} {name} {levels}/{start_date}~{end_date}/{main_location} {sub_location}")
     # 지진
     elif disaster == 2:
         print("지진")
