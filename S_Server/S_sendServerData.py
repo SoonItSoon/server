@@ -27,8 +27,8 @@ def search():
     disaster = int(request.args.get("disaster"))
     level = request.args.get("level")
     inner_text = request.args.get("inner_text")
-    print(f"{start_date}, {end_date}, {main_location}, {sub_location}, {disaster}, {level}, {inner_text}")
 
+    log = ""
     # 전염병
     if disaster == 1:
         name = request.args.get("name")
@@ -37,17 +37,19 @@ def search():
         for req_level in req_levels:
             levels.append(levelDict[disaster][int(req_level)])
         if inner_text:
-            print(f"[S_sendServerData]{disaster} {name} {levels}/{start_date}~{end_date}/{main_location} {sub_location}/{inner_text}")
+            log = f"[S_sendServerData] 재난 : {disaster} {name} {levels}\n날짜 : {start_date}~{end_date}\n위치 : {main_location} {sub_location}\n검색 : {inner_text}"
         else:
-            print(f"[S_sendServerData]{disaster} {name} {levels}/{start_date}~{end_date}/{main_location} {sub_location}")
+            log = f"[S_sendServerData] 재난 : {disaster} {name} {levels}\n날짜 : {start_date}~{end_date}\n위치 : {main_location} {sub_location}\n검색 없음"
     # 지진
     elif disaster == 2:
+
         print("지진")
     # 미세먼지
     elif disaster == 3:
         print("미세먼지")
     # 태풍
     elif disaster == 4:
+        name = request.args.get("name")
         print("태풍")
     # 홍수
     elif disaster == 5:
@@ -64,7 +66,7 @@ def search():
     # 대설
     else:
         print("대설")
-    return render_template("home.html")
+    return render_template("search.html", log_data=log)
 
 
 
