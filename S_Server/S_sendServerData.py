@@ -4,7 +4,7 @@ import pymysql
 
 app = Flask("Hello World!")
 
- testDB = pymysql.connect(
+testDB = pymysql.connect(
      user='kyeol',
      passwd='hee',
      host='127.0.0.1',
@@ -88,13 +88,15 @@ def search():
     else:
         print("대설")
     
-    sql = f"SELECT * FROM alertMsg WHERE date >= {start_date} and date <= {end_date};"
+    sql = f"SELECT id, msg, send_platform, location_name FROM alertMsg WHERE date >= '{start_date}' and date <= '{end_date}';"
     cursor.execute(sql)
     result = cursor.fetchall()
     jsonAll = dict(zip(range(1, len(result) + 1), result))
 
     print(log)
-    return render_template("search.html", log_data=json.dumps(log, ensure_ascii=False), db_data=json.dumps(jsonAll, ensure_ascii=False))
+    all_data = {"log_data": json.dumps(log, ensure_ascii=False), "db_data": json.dumps(jsonAll, ensure_ascii=False)}
+    return render_template("search.html", all_data=json.dumps(jsonAll, ensure_ascii=False))
+# return render_template("search.html", all_data=json.dumps(all_data, ensure_ascii=False))
 
 
 
