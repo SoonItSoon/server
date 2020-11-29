@@ -16,12 +16,3 @@ import S_Background.S_mainBackground
 import S_Server.S_sendServerData
 
 
-# AlertMsgDB 접근 변수
-AlertMsgDB = pymysql.connect(
-     user='kyeol',
-     passwd='hee',
-     host='127.0.0.1',
-     db='AlertMsgDB',
-     charset='utf8'
-)
-AlertMsgDB_cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)

@@ -1,4 +1,4 @@
-##################################
+#################################
 # Group        : S_Server
 # Module       : S_sendServerData
 # Purpose      : 모바일 어플리케이션이나 웹 서버에서 보낸 HTTP Method를 분석하고
@@ -8,11 +8,19 @@
 ##################################
 
 from flask import Flask, render_template, request
+import time
 import json
 import pymysql
 
-# AlertMsgDB 접근(soonitsoon_server_main에 정의)
-global AlertMsgDB_cursor
+# AlertMsgDB 접근 변수
+AlertMsgDB = pymysql.connect(
+     user='kyeol',
+     passwd='hee',
+     host='127.0.0.1',
+     db='AlertMsgDB',
+     charset='utf8'
+)
+AlertMsgDB_cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
 
 # 재난별 level dict : 전염병(1) 지진(2) 미세먼지(3) 태풍(4) 홍수(5) 폭염(6) 한파(7) 호우(8) 대설(9)
 levelDict = {1: {1: "접촉안내", 2: "동선공개", 3: "발생안내", 9: "캠페인"},
@@ -37,9 +45,12 @@ def home():
 # 재난문자 검색
 @app.route("/search")
 def search():
+    now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
     # 공통
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
+    if not end_date:
+       end_date = now_date
     main_location = request.args.get("main_location")
     sub_location = request.args.get("sub_location")
     disaster = int(request.args.get("disaster"))
@@ -50,28 +61,29 @@ def search():
         levels += levelDict[disaster][int(req_level)] + " "
     inner_text = request.args.get("inner_text")
 
-    sql_AMall = f"SELECT * FROM AM WHERE send_date BETWEEN {start_date} and {end_date}"
-    sql_AMloc = f"{AMall} and send_location like '%{main_location} {sub_location}%' or send_location like '%{main_location} 전체%'"
+    sql_AMall = f"SELECT * FROM AM WHERE send_date BETWEEN '{start_date}' AND '{end_date}' AND disaster = {disaster}"
+    sql_AMloc = f"{sql_AMall} AND (send_location LIKE '%{main_location} {sub_location}%' OR send_location LIKE '%{main_location} 전체%')"
     # SQL쿼리와 로그
     sql = ""
-    log = ""
+    log = f"[{now_date} S_sendServerData]search request\n"
     # 전염병
     if disaster == 1:
         name = request.args.get("name")
-        sql_PD = f"SELECT * FROM PD WHERE name = {name} AND level IN ({level})"
-        log = f"[S_sendServerData] search request\ndisaster : 전염병 {name}\nlevel : {levels}\ndate : {start_date} ~ {end_date}\n"
+        sql_PD = f"SELECT * FROM PD WHERE name = '{name}' AND level IN ({level})"
+        log += f"disaster : 전염병 {name}\nlevel : {levels}\ndate : {start_date} ~ {end_date}\n"
         if main_location and sub_location:
-            sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_PD})"
+            sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_PD}) AS PD"
             log += f"location : {main_location} {sub_location}\n"
         else:
-            sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_PD})"
+            sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_PD}) AS PD"
             log += "location : 전체\n"
         
         if inner_text:
-            sql += f"WHERE AM.msg like '%{inner_text}%'"
+            sql += f" WHERE AM.msg like '%{inner_text}%'"
             log += f"inner_text : {inner_text}\n"
         else:
             log += "inner_text : none\n"
+        sql += " ORDER BY id LIMIT 100;"
         log += f"DB query : {sql}"
     # 지진
     elif disaster == 2:
@@ -111,7 +123,7 @@ def search():
     else:
         print("대설")
     
-    sql = f"SELECT id, msg, send_platform, location_name FROM alertMsg WHERE date >= '{start_date}' and date <= '{end_date}';"
+    sql = f"SELECT id, msg, send_platform, location_name, DATE_FORMAT(date, '%Y-%m-%d %H:%i:%s') AS date FROM alertMsg WHERE date BETWEEN '{start_date}' AND '{end_date}';"
     AlertMsgDB_cursor.execute(sql)
     result = AlertMsgDB_cursor.fetchall()
     jsonAll = dict(zip(range(1, len(result) + 1), result))
