@@ -8,10 +8,10 @@
 ##################################
 
 from flask import Flask, render_template, request
-import datetime
 import time
-import json
 import pymysql
+import json
+import datetime, decimal
 
 # AlertMsgDB 접근 변수
 AlertMsgDB = pymysql.connect(
@@ -39,7 +39,11 @@ levelDict = {1: {1: "접촉안내", 2: "동선공개", 3: "발생안내", 9: "�
 def json_default(value):
     if isinstance(value, datetime.datetime):
         return value.strftime("%Y-%m-%d %H:%M:%s")
-    raise TypeError("not JSON serializable")
+    elif isinstance(value, decimal.Decimal):
+        return float(value)
+    else:
+        print(f"json 디버깅 : {value} ({type(value)})")
+        raise TypeError("not JSON serializable")
 
 # 서버
 app = Flask("SoonItSoon Server")
@@ -88,10 +92,10 @@ def search():
         sql_PD = f"SELECT * FROM PD WHERE name = '{name}' AND level IN ({level})"
         log += f"disaster : 전염병 {name}\nlevel : {levels}\ndate : {start_date} ~ {end_date}\n"
         if main_location and sub_location:
-            sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_PD}) AS PD"
+            sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_PD}) AS PD USING (mid)"
             log += f"location : {main_location} {sub_location}\n"
         else:
-            sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_PD}) AS PD"
+            sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_PD}) AS PD USING (mid)"
             log += "location : 전체\n"
         
         if inner_text:
@@ -107,10 +111,10 @@ def search():
         sql_EQ = f"SELECT * FROM EQ WHERE level IN ({level}) AND (scale BETWEEN {scale_min} AND {scale_max} OR scale IS NULL)"
         log += f"disaster : 지진\nlevel : {levels}\ndate : {start_date} ~ {end_date}\n"
         if main_location and sub_location:
-            sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_EQ}) AS EQ"
+            sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_EQ}) AS EQ USING (mid)"
             log += f"location : {main_location} {sub_location}\n"
         else:
-            sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_EQ}) AS EQ"
+            sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_EQ}) AS EQ USING (mid)"
             log += "location : 전체\n"
         if obs_location:
             sql += f" WHERE EQ.obs_location = '{obs_location} OR EQ.obs_location IS NULL'"
@@ -146,7 +150,7 @@ def search():
         print("대설")
     
     sql += " ORDER BY AM.mid DESC LIMIT 100;"
-        log += f"DB query : {sql}"
+    log += f"DB query : {sql}"
     if disaster not in (1, 2):
         sql = f"SELECT * FROM alertMsg WHERE date BETWEEN '{start_date}' AND '{end_date}';"
     AlertMsgDB_cursor.execute(sql)
