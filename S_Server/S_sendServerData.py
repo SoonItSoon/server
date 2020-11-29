@@ -99,23 +99,29 @@ def search():
             log += f"inner_text : {inner_text}\n"
         else:
             log += "inner_text : none\n"
-        sql += " ORDER BY AM.mid DESC LIMIT 100;"
-        log += f"DB query : {sql}"
     # 지진(2)
     elif disaster == 2:
         scale_min = float(request.args.get("scale_min"))
         scale_max = float(request.args.get("scale_max"))
         obs_location = request.args.get("obs_location")
-        if inner_text:
-            if obs_location:
-                log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 {obs_location}에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}", "텍스트 검색": f"{inner_text}"}
-            else:
-                log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 전국에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}", "텍스트 검색": f"{inner_text}"}
+        sql_EQ = f"SELECT * FROM EQ WHERE level IN ({level}) AND (scale BETWEEN {scale_min} AND {scale_max} OR scale IS NULL)"
+        log += f"disaster : 지진\nlevel : {levels}\ndate : {start_date} ~ {end_date}\n"
+        if main_location and sub_location:
+            sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_EQ}) AS EQ"
+            log += f"location : {main_location} {sub_location}\n"
         else:
-            if obs_location:
-                log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 {obs_location}에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}"}
-            else:
-                log = {"재난": f"지진 {levels}", "날짜": f"{start_date} ~ {end_date}", "위치": f"{main_location} {sub_location}(으)로 전송된 전국에서 발생한 지진", "진도":f"{scale_min} ~ {scale_max}"}
+            sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_EQ}) AS EQ"
+            log += "location : 전체\n"
+        if obs_location:
+            sql += f" WHERE EQ.obs_location = '{obs_location} OR EQ.obs_location IS NULL'"
+            log += f"obs_location : {obs_location}\n"
+        else:
+            log += "obs_location : 전체\n"
+        if inner_text:
+            sql += f" WHERE AM.msg like '%{inner_text}%'"
+            log += f"inner_text : {inner_text}\n"
+        else:
+            log += "inner_text : none\n"
     # 미세먼지(3)
     elif disaster == 3:
         print("미세먼지")
@@ -139,7 +145,9 @@ def search():
     else:
         print("대설")
     
-    if not sql:
+    sql += " ORDER BY AM.mid DESC LIMIT 100;"
+        log += f"DB query : {sql}"
+    if disaster not in (1, 2):
         sql = f"SELECT * FROM alertMsg WHERE date BETWEEN '{start_date}' AND '{end_date}';"
     AlertMsgDB_cursor.execute(sql)
     result = AlertMsgDB_cursor.fetchall()
