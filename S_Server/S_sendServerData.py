@@ -23,6 +23,8 @@ AlertMsgDB = pymysql.connect(
 )
 AlertMsgDB_cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
 
+# 재난 구분 dict
+disasterDict = {1: "전염병", 2: "지진", 3: "미세먼지", 4: "태풍", 5: "홍수", 6: "폭염", 7: "한파", 8: "호우", 9: "대설"}
 # 재난별 level dict : 전염병(1) 지진(2) 미세먼지(3) 태풍(4) 홍수(5) 폭염(6) 한파(7) 호우(8) 대설(9)
 levelDict = {1: {1: "접촉안내", 2: "동선공개", 3: "발생안내", 9: "캠페인"},
                 2: {1: "지진", 9: "기타"},
@@ -33,17 +35,20 @@ levelDict = {1: {1: "접촉안내", 2: "동선공개", 3: "발생안내", 9: "�
                 7: {1: "경보", 2: "주의보", 9: "기타"},
                 8: {1: "경보", 2: "주의보", 9: "기타"},
                 9: {1: "경보", 2: "주의보", 9: "기타"}}
+# 재난 테이블 dict
+AlertMsgDBDict = {0: "AM", 1: "PD", 2: "EQ", 3: "FD", 4: "TP", 5: "FL", 6: "HW", 7: "CW", 8: "HR", 9: "HS"}
 
 # datetime을 json화 시키기 위한 함수
-# 참고 : https://dgkim5360.tistory.com/entry/not-JSON-serializable-error-on-python-json
 def json_default(value):
+    # 참고 : https://dgkim5360.tistory.com/entry/not-JSON-serializable-error-on-python-json
     if isinstance(value, datetime.datetime):
-        return value.strftime("%Y-%m-%d %H:%M:%s")
+        return value.strftime("%Y-%m-%d %H:%M:%S")
     elif isinstance(value, decimal.Decimal):
         return float(value)
     else:
-        print(f"json 디버깅 : {value} ({type(value)})")
+        print(f"json_default error : {value} ({type(value)})")
         raise TypeError("not JSON serializable")
+
 
 # 서버
 app = Flask("SoonItSoon Server")
@@ -81,35 +86,37 @@ def search():
     inner_text = request.args.get("inner_text")
 
     # AM 테이블 쿼리
-    sql_AMall = f"SELECT * FROM AM WHERE send_date BETWEEN '{start_date}' AND '{end_date}' AND disaster = {disaster}"
+    sql_AMall = f"SELECT * FROM AM WHERE (send_date BETWEEN '{start_date}' AND '{end_date}' AND disaster = {disaster})"
+    if inner_text:
+        sql_AMall += f" AND msg like '%{inner_text}%'"
     sql_AMloc = f"{sql_AMall} AND (send_location LIKE '%{main_location} {sub_location}%' OR send_location LIKE '%{main_location} 전체%')"
     # SQL 쿼리와 로그
     sql = ""
     log = f"[{now_date} S_sendServerData] REST search request\n"
-    # 전염병(1)
-    if disaster == 1:
+
+    # 전염병(1) 태풍(4)
+    if disaster in [1, 4]:
+        # 전염병 이름
         name = request.args.get("name")
-        sql_PD = f"SELECT * FROM PD WHERE name = '{name}' AND level IN ({level})"
-        log += f"disaster : 전염병 {name}\nlevel : {levels}\ndate : {start_date} ~ {end_date}\n"
+
+        sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE name = '{name}' AND level IN ({level})"
+        log += f"disaster : {disasterDict[disaster]} {name}\nlevel : {levels}\ndate : {start_date} ~ {end_date}\n"
         if main_location and sub_location:
-            sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_PD}) AS PD USING (mid)"
+            sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
             log += f"location : {main_location} {sub_location}\n"
         else:
-            sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_PD}) AS PD USING (mid)"
+            sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
             log += "location : 전체\n"
-        
-        if inner_text:
-            sql += f" WHERE AM.msg like '%{inner_text}%'"
-            log += f"inner_text : {inner_text}\n"
-        else:
-            log += "inner_text : none\n"
     # 지진(2)
     elif disaster == 2:
+        # 최소/최대 규모
         scale_min = float(request.args.get("scale_min"))
         scale_max = float(request.args.get("scale_max"))
+        # 관측 위치
         obs_location = request.args.get("obs_location")
+
         sql_EQ = f"SELECT * FROM EQ WHERE level IN ({level}) AND (scale BETWEEN {scale_min} AND {scale_max} OR scale IS NULL)"
-        log += f"disaster : 지진\nlevel : {levels}\ndate : {start_date} ~ {end_date}\n"
+        log += f"disaster : {disasterDict[disaster]}\nlevel : {levels}\ndate : {start_date} ~ {end_date}\n"
         if main_location and sub_location:
             sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_EQ}) AS EQ USING (mid)"
             log += f"location : {main_location} {sub_location}\n"
@@ -117,38 +124,44 @@ def search():
             sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_EQ}) AS EQ USING (mid)"
             log += "location : 전체\n"
         if obs_location:
-            sql += f" WHERE EQ.obs_location = '{obs_location} OR EQ.obs_location IS NULL'"
-            log += f"obs_location : {obs_location}\n"
+            sql += f" WHERE EQ.obs_location = '{obs_location}' OR EQ.obs_location IS NULL"
+            log += f"scale : {scale_min} ~ {scale_max}\nobs_location : {obs_location}\n"
         else:
-            log += "obs_location : 전체\n"
-        if inner_text:
-            sql += f" WHERE AM.msg like '%{inner_text}%'"
-            log += f"inner_text : {inner_text}\n"
+            log += f"scale : {scale_min} ~ {scale_max}\nobs_location : 전체\n"
+    # 미세먼지(3) 홍수(5) 폭염(6) 한파(7) 호우(8) 대설(9)
+    elif disaster in [3, 5, 6, 7, 8, 9]:
+        sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE level IN ({level})"
+        log += f"disaster : {disasterDict[disaster]}\nlevel : {levels}\ndate : {start_date} ~ {end_date}\n"
+        if main_location and sub_location:
+            sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
+            log += f"location : {main_location} {sub_location}\n"
         else:
-            log += "inner_text : none\n"
-    # 미세먼지(3)
-    elif disaster == 3:
-        print("미세먼지")
-    # 태풍(4)
-    elif disaster == 4:
-        name = request.args.get("name")
-        print("태풍")
-    # 홍수(5)
-    elif disaster == 5:
-        print("홍수")
-    # 폭염(6)
-    elif disaster == 6:
-        print("폭염")
-    # 한파(7)
-    elif disaster == 7:
-        print("한파")
-    # 호우(8)
-    elif disaster == 8:
-        print("호우")
-    # 대설(9)
-    else:
-        print("대설")
+            sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
+            log += "location : 전체\n"
+    # # 태풍(4)
+    # elif disaster == 4:
+    #     name = request.args.get("name")
+    #     print("태풍")
+    # # 홍수(5)
+    # elif disaster == 5:
+    #     print("홍수")
+    # # 폭염(6)
+    # elif disaster == 6:
+    #     print("폭염")
+    # # 한파(7)
+    # elif disaster == 7:
+    #     print("한파")
+    # # 호우(8)
+    # elif disaster == 8:
+    #     print("호우")
+    # # 대설(9)
+    # else:
+    #     print("대설")
     
+    if inner_text:
+        log += f"inner_text : {inner_text}\n"
+    else:
+        log += "inner_text : none\n"
     sql += " ORDER BY AM.mid DESC LIMIT 100;"
     log += f"DB query : {sql}"
     if disaster not in (1, 2):
