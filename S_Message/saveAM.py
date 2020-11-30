@@ -55,7 +55,7 @@ for index in range(pageMin, pageMax + 1):
             context.append("")
         # 재난문자 데이터 가공
         sendingDate = sendTime[0].replace('/', '-') + " " + sendTime[1]
-        msg = context[0].replace("\n", "")
+        msg = context[0].replace("\n", " ")
         if msg.startswith("["):
             sender = msg.split("[")[1].split("]")[0].split(",")[0].split(" ")[0]
         else:
