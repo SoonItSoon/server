@@ -8,20 +8,21 @@
 ##################################
 
 from flask import Flask, render_template, request
+from .. import soonitsoon_server_main.AlertMsgDB, soonitsoon_server_main.AlertMsgDB_cursor
 import time
 import pymysql
 import json
 import datetime, decimal
 
-# AlertMsgDB 접근 변수
-AlertMsgDB = pymysql.connect(
-     user='kyeol',
-     passwd='hee',
-     host='127.0.0.1',
-     db='AlertMsgDB',
-     charset='utf8'
-)
-AlertMsgDB_cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
+# # AlertMsgDB 접근 변수
+# AlertMsgDB = pymysql.connect(
+#      user='kyeol',
+#      passwd='hee',
+#      host='127.0.0.1',
+#      db='AlertMsgDB',
+#      charset='utf8'
+# )
+# AlertMsgDB_cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
 
 # 재난 구분 dict
 disasterDict = {1: "전염병", 2: "지진", 3: "미세먼지", 4: "태풍", 5: "홍수", 6: "폭염", 7: "한파", 8: "호우", 9: "대설"}
