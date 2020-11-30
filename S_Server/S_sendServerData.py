@@ -142,25 +142,6 @@ def search():
         else:
             sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
             log += f"{log_default} location : 전체\n"
-    # # 태풍(4)
-    # elif disaster == 4:
-    #     name = request.args.get("name")
-    #     print("태풍")
-    # # 홍수(5)
-    # elif disaster == 5:
-    #     print("홍수")
-    # # 폭염(6)
-    # elif disaster == 6:
-    #     print("폭염")
-    # # 한파(7)
-    # elif disaster == 7:
-    #     print("한파")
-    # # 호우(8)
-    # elif disaster == 8:
-    #     print("호우")
-    # # 대설(9)
-    # else:
-    #     print("대설")
     
     if inner_text:
         log += f"{log_default} inner_text : {inner_text}\n"
@@ -168,6 +149,7 @@ def search():
         log += f"{log_default} inner_text : none\n"
     sql += " ORDER BY AM.mid DESC LIMIT 100;"
     log += f"{log_default} DB query : {sql}\n"
+    
     AlertMsgDB_cursor.execute(sql)
     result = AlertMsgDB_cursor.fetchall()
     jsonAll = dict(zip(range(1, len(result) + 1), result))
