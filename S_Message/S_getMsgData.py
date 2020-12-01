@@ -1,7 +1,7 @@
 from selenium import webdriver
 import pymysql
 import csv
-from time import sleep
+from time import time, strftime, localtime, sleep
 
 # # DB 접속
 # AlertMsgDB = pymysql.connect(
@@ -16,10 +16,27 @@ from time import sleep
 # cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
 
 CSV_FILE = "alertMsgData.csv"
+lastMID = -1
+failList = []
+URL = "http://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgView.jsp?menuSeq=679"
+
 
 def getLastMID():
     file = open("alertMsgData.csv", "r", encoding="utf-8")
     reader = csv.reader(file)
-    print(reader[-1])
+    lastMID = -1
+    for line in reader:
+        lastMID = line[0]
+    now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    log_default = f"{now_date} [S_getMsgData]"
+    print(f"{log_default} getLastMID() : {lastMID}")
+    return lastMID
 
-getLastMID()
+def getMsgData():
+    now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    log_default = f"{now_date} [S_getMsgData]"
+    if lastMID = -1
+        lastMID = getLastMID()
+
+
+print(getLastMID())
