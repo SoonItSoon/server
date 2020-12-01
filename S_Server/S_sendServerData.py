@@ -4,14 +4,15 @@
 # Purpose      : 모바일 어플리케이션이나 웹 서버에서 보낸 HTTP Method를 분석하고
 #                이에 맞는 데이터베이스 쿼리를 작성하여
 #                AlertMsgDB나 DisasterDB에서 정보를 가져와 json 형태로 출력한다.
-# Final Update : 2020-11-28
+# Final Update : 2020-12-01
 ##################################
 
 from flask import Flask, render_template, request
-import time
-import pymysql
-import json
-import datetime, decimal
+from pymysql import connect, cursors
+from json import dumps
+from time import time, localtime, strftime
+from datetime import datetime
+from decimal import decimal
 
 # AlertMsgDB 접근 변수
 AlertMsgDB = pymysql.connect(
@@ -63,8 +64,9 @@ def home():
 # 재난문자 검색
 @app.route("/search")
 def search():
+    start_time = time.localtime(time.time())
     # 현재 시각
-    now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    now_date = time.strftime('%Y-%m-%d %H:%M:%S', start_time)
     # 시작 날짜
     start_date = request.args.get("start_date")
     # 종료 날짜 (default : 현재 시각)
@@ -154,7 +156,9 @@ def search():
     result = AlertMsgDB_cursor.fetchall()
     jsonAll = dict(zip(range(1, len(result) + 1), result))
 
-    log += f"{log_default} DB result : {len(result)} results"
+    log += f"{log_default} DB result : {len(result)} results\n"
+    end_time = time.localtime(time.time())
+    log += f"{log_default} Process Time : {(end_time-start_time):.3f}s"
     print(log)
     return render_template("search.html", all_data=json.dumps(jsonAll, default=json_default, ensure_ascii=False))
 

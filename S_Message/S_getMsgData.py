@@ -17,9 +17,15 @@ from time import time, strftime, localtime, sleep
 
 CSV_FILE = "alertMsgData.csv"
 lastMID = -1
+msgList = []
 failList = []
 URL = "http://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgView.jsp?menuSeq=679"
 
+# webdriver 설정
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument('headless')
+chrome_options.add_argument('--disable-gpu')
+chrome_options.add_argument('lang=ko_KR')
 
 def getLastMID():
     file = open("alertMsgData.csv", "r", encoding="utf-8")
@@ -37,6 +43,11 @@ def getMsgData():
     log_default = f"{now_date} [S_getMsgData]"
     if lastMID = -1
         lastMID = getLastMID()
+    # 밖에다 둬도 될까?
+    browser = webdriver.Chrome(executable_path="./chromedriver", options=chrome_options)
+    browser.get(URL)
+
+    received = True
 
 
 print(getLastMID())
