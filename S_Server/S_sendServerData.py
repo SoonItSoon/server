@@ -4,23 +4,13 @@
 # Purpose      : 모바일 어플리케이션이나 웹 서버에서 보낸 HTTP Method를 분석하고
 #                이에 맞는 데이터베이스 쿼리를 작성하여
 #                AlertMsgDB나 DisasterDB에서 정보를 가져와 json 형태로 출력한다.
-# Final Update : 2020-12-01
+# Final Update : 2020-12-03
 ##################################
 
 from flask import Flask, render_template, request, Response
 import pymysql
 import json
 import time, datetime, decimal
-
-# AlertMsgDB 접근 변수
-AlertMsgDB = pymysql.connect(
-    user='kyeol',
-    passwd='hee',
-    host='127.0.0.1',
-    db='AlertMsgDB',
-    charset='utf8'
-)
-AlertMsgDB_cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
 
 # 재난 구분 dict
 disasterDict = {1: "전염병", 2: "지진", 3: "미세먼지", 4: "태풍", 5: "홍수", 6: "폭염", 7: "한파", 8: "호우", 9: "대설"}
@@ -36,6 +26,9 @@ levelDict = {1: {1: "접촉안내", 2: "동선공개", 3: "발생안내", 9: "�
                 9: {1: "경보", 2: "주의보", 9: "기타"}}
 # 재난 테이블 dict
 AlertMsgDBDict = {0: "AM", 1: "PD", 2: "EQ", 3: "FD", 4: "TP", 5: "FL", 6: "HW", 7: "CW", 8: "HR", 9: "HS"}
+
+# 요청 횟수
+int reqCnt = 0
 
 # datetime을 json화 시키기 위한 함수
 def json_default(value):
@@ -62,6 +55,8 @@ def home():
 # 재난문자 검색
 @app.route("/search")
 def search():
+    reqCnt += 1
+    # 성능 측정 및 로그용 시간
     start_time = time.time()
     # 현재 시각
     now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
@@ -105,7 +100,7 @@ def search():
     # SQL 쿼리와 로그
     sql = ""
     log_default = f"{now_date} [S_sendServerData]"
-    log = f"{log_default} REST search request\n"
+    log = f"{log_default} REST search request\nRequest Cnt : {reqCnt}\n"
 
     # 전염병(1) 태풍(4)
     if disaster in [1, 4]:

@@ -17,9 +17,9 @@ cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
 
 # 국민재난안전포털 (2020-12-02 20:53까지)
 URL = "http://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgView.jsp?menuSeq=679"
-# 완료한 내역 : 1~69562
-pageMin = 69563
-pageMax = 69704
+# 완료한 내역 : 1~69704
+pageMin = 69705
+pageMax = 69850
 alertMsg = []
 failed = []
 
