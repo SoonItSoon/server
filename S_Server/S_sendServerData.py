@@ -8,11 +8,9 @@
 ##################################
 
 from flask import Flask, render_template, request
-from pymysql import connect, cursors
-from json import dumps
-from time import time, localtime, strftime
-from datetime import datetime
-from decimal import decimal
+import pymysql
+import json
+import time, datetime, decimal
 
 # AlertMsgDB 접근 변수
 AlertMsgDB = pymysql.connect(
@@ -64,9 +62,9 @@ def home():
 # 재난문자 검색
 @app.route("/search")
 def search():
-    start_time = time.localtime(time.time())
+    start_time = time.time()
     # 현재 시각
-    now_date = time.strftime('%Y-%m-%d %H:%M:%S', start_time)
+    now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
     # 시작 날짜
     start_date = request.args.get("start_date")
     # 종료 날짜 (default : 현재 시각)
@@ -104,8 +102,10 @@ def search():
     if disaster in [1, 4]:
         # 전염병 이름
         name = request.args.get("name")
-
-        sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE name = '{name}' AND level IN ({level})"
+        if name:
+            sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE name = '{name}' AND level IN ({level})"
+        else:
+            sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE level IN ({level})"
         log += f"{log_default} disaster : {disasterDict[disaster]} {name}\n{log_default} level : {levels}\n{log_default} date : {start_date} ~ {end_date}\n"
         if main_location and sub_location:
             sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
@@ -157,10 +157,11 @@ def search():
     jsonAll = dict(zip(range(1, len(result) + 1), result))
 
     log += f"{log_default} DB result : {len(result)} results\n"
-    end_time = time.localtime(time.time())
+    end_time = time.time()
     log += f"{log_default} Process Time : {(end_time-start_time):.3f}s"
     print(log)
     return render_template("search.html", all_data=json.dumps(jsonAll, default=json_default, ensure_ascii=False))
+
 
 # 서버 run
 app.run(host="203.253.25.184", port=8080)
