@@ -7,7 +7,7 @@
 # Final Update : 2020-12-01
 ##################################
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, Response
 import pymysql
 import json
 import time, datetime, decimal
@@ -65,6 +65,15 @@ def search():
     start_time = time.time()
     # 현재 시각
     now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
+    # AlertMsgDB 접근 변수
+    AlertMsgDB = pymysql.connect(
+        user='kyeol',
+        passwd='hee',
+        host='127.0.0.1',
+        db='AlertMsgDB',
+        charset='utf8'
+    )
+    AlertMsgDB_cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
     # 시작 날짜
     start_date = request.args.get("start_date")
     # 종료 날짜 (default : 현재 시각)
@@ -160,7 +169,7 @@ def search():
     end_time = time.time()
     log += f"{log_default} Process Time : {(end_time-start_time):.3f}s"
     print(log)
-    return render_template("search.html", all_data=json.dumps(jsonAll, default=json_default, ensure_ascii=False))
+    return Response(json.dumps(jsonAll, default=json_default, ensure_ascii=False), content_type="application/json; charset=utf-8");
 
 
 # 서버 run
