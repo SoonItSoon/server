@@ -15,11 +15,11 @@ AlertMsgDB = pymysql.connect(
 insertSQL = "INSERT INTO alertMsg VALUES (%s, %s, %s, %s, %s, %s)"
 cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
 
-# 국민재난안전포털 (2020-12-02 20:53까지)
+# 국민재난안전포털 (2020-12-04 08:50까지)
 URL = "http://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgView.jsp?menuSeq=679"
-# 완료한 내역 : 1~69704
-pageMin = 69705
-pageMax = 69850
+# 완료한 내역 : 1~69850
+pageMin = 69851
+pageMax = 69851
 alertMsg = []
 failed = []
 

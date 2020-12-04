@@ -28,7 +28,7 @@ levelDict = {1: {1: "접촉안내", 2: "동선공개", 3: "발생안내", 9: "�
 AlertMsgDBDict = {0: "AM", 1: "PD", 2: "EQ", 3: "FD", 4: "TP", 5: "FL", 6: "HW", 7: "CW", 8: "HR", 9: "HS"}
 
 # 요청 횟수
-int reqCnt = 0
+reqCnt = 0
 
 # datetime을 json화 시키기 위한 함수
 def json_default(value):
@@ -55,6 +55,7 @@ def home():
 # 재난문자 검색
 @app.route("/search")
 def search():
+    global reqCnt
     reqCnt += 1
     # 성능 측정 및 로그용 시간
     start_time = time.time()
@@ -100,7 +101,7 @@ def search():
     # SQL 쿼리와 로그
     sql = ""
     log_default = f"{now_date} [S_sendServerData]"
-    log = f"{log_default} REST search request\nRequest Cnt : {reqCnt}\n"
+    log = f"{log_default} REST Search Request (Request Cnt : {reqCnt})\n"
 
     # 전염병(1) 태풍(4)
     if disaster in [1, 4]:
