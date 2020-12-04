@@ -9,22 +9,10 @@
 from selenium import webdriver
 import pymysql
 import csv
-from time import time, strftime, localtime, sleep
+import time
 import re
 
-# # DB 접속
-# AlertMsgDB = pymysql.connect(
-#     user='kyeol',
-#     passwd='hee',
-#     host='127.0.0.1',
-#     db='AlertMsgDB',
-#     charset='utf8'
-# )
-# # id, date, msg, send_platform, location_name, type
-# insertSQL = "INSERT INTO alertMsg VALUES (%s, %s, %s, %s, %s, %s)"
-# cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
-
-CSV_FILE = "alertMsgData.csv"
+CSV_FILE = "/home/sslab-hpc/Cap2020/server/S_Message/alertMsgData.csv"
 # 가장 최근의 일련번호를 갖고있는 변수
 lastMID = -1
 # 실패한 일련번호를 저장하는 list
@@ -41,11 +29,13 @@ chrome_options.add_argument('lang=ko_KR')
 
 # csv 파일에서 
 def getLastMID():
+    return 69831
     global CSV_FILE
-    file = open("CSV_FILE", "r", encoding="utf-8")
+    file = open("alertMsgData.csv", "r", encoding="utf-16")
     reader = csv.reader(file)
     lastMID = -1
     for line in reader:
+        print(line[0])
         lastMID = line[0]
     now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
     log_default = f"{now_date} [S_getMsgData]"
@@ -56,14 +46,14 @@ def getLastMID():
 def getSender(msg):
     search = re.search("\[(.+?)\]", msg)
     if search:
-        sender = m.group(1).split(",")[0]
-        sender = re.sub("[0-9\[\- ]", "", found)
+        sender = search.group(1).split(",")[0]
+        sender = re.sub("[0-9\[\- ]", "", sender)
     else:
         sender = ""
     return sender
 
 
-def saveMsg2DB(msgList):
+def saveMsg2DB(msgList, pdList):
     # DB 접속
     AlertMsgDB = pymysql.connect(
         user='kyeol',
@@ -72,10 +62,13 @@ def saveMsg2DB(msgList):
         db='AlertMsgDB',
         charset='utf8'
     )
-    # id, date, msg, send_platform, location_name, type
-    insertSQL = "INSERT INTO AMtest VALUES (%s, %s, %s, %s, %s, %s)"
+    # mid, send_date, msg, send_location, sender, disaster
+    insertSQL = "INSERT INTO AM VALUES (%s, %s, %s, %s, %s, %s)"
     cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
     cursor.executemany(insertSQL, msgList)
+    AlertMsgDB.commit()
+    insertSQL = "INSERT INTO PD VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    cursor.executemany(insertSQL, pdList)
     AlertMsgDB.commit()
     cursor.close()
     AlertMsgDB.close()
@@ -83,7 +76,8 @@ def saveMsg2DB(msgList):
 
 def saveMsg2CSV(msgList):
     # 재난문자 데이터 csv로 저장
-    file = open("alertMsgData.csv", mode="a", newline="")
+    global CSV_FILE
+    file = open(CSV_FILE, mode="a", newline="")
     writer = csv.writer(file)
 
     # writer.writerow(["일련번호", "발송시간", "내용", "발송주체", "발송지역", "재난구분"])
@@ -94,20 +88,22 @@ def saveMsg2CSV(msgList):
 
 
 def getMsgData():
-    now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    now_date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     log_default = f"{now_date} [S_getMsgData]"
     global lastMID
-    if lastMID = -1
+    if lastMID == -1:
         lastMID = getLastMID()
     index = lastMID
     # 브라우저 생성
     global chrome_options
-    browser = webdriver.Chrome(executable_path="./chromedriver", options=chrome_options)
+    browser = webdriver.Chrome(executable_path="/home/sslab-hpc/Cap2020/server/S_Message/chromedriver", options=chrome_options)
     browser.get(URL)
     # 재난문자를 임시 저장하는 list
     msgList = []
+    pdList = []
     received = True
-    while received:
+    failCnt = 0
+    while received == True:
         nextBtn = browser.find_element_by_id("bbs_gubun")
         browser.execute_script("arguments[0].href = arguments[1]", nextBtn, f"javascript:articleDtl('63','{index}');")
         nextBtn.send_keys('\n')
@@ -117,16 +113,17 @@ def getMsgData():
             time.sleep(0.5)
         sendTime = browser.find_element_by_id("sj").text.split()
 
-        failCnt = 0
+        global failList
         # 정보가 없는 경우 failList에 추가
         if len(sendTime) == 0:
-            print(f"!!!{index}번 재난문자 실패({lastMID})!!!")
             failList.append(index)
             failCnt += 1
+            print(f"!!!{index}번 재난문자 실패({lastMID}, {failCnt})!!!")
             if failCnt >= 3:
                 tempList = failList[-3:]
                 failList = [x for x in failList if x not in tempList]
                 received = False
+                break
                 continue
         # 정보가 있을 경우 추출 후 msgList에 저장
         else:
@@ -136,14 +133,16 @@ def getMsgData():
             if len(context) < 2:
                 context.append("")
             # 재난문자 데이터 가공
-            sendingDate = sendTime[0].replace('/', '-') + " " + sendTime[1]
+            send_date = sendTime[0].replace('/', '-') + " " + sendTime[1]
             msg = context[0].replace("\n", " ")
+            send_location = context[1].replace("\n", ",")
             sender = getSender(msg)
-            locationName = context[1].replace("\n", ",")
-            disasterType = ""
+            disasterType = 1
             # 재난문자 데이터 임시 저장
-            msgList.append([index, sendingDate, msg, sender, locationName, disasterType])
-            print(f"[S_getMsgData] SUCCESS loading {{id: {index}, date: {sendingDate}, msg: {msg}, send_platform: {sender}, location_name: {locationName}, type: {disasterType}}}({len(alertMsg)})")
+            # mid, send_date, msg, send_location, sender, disaster
+            msgList.append([index, send_date, msg, send_location, sender, disasterType])
+            pdList.append([index, "COVID-19", 1, 1, now_date[0:11] + str(int(now_date[11:13])-2) + now_date[13:], now_date[0:11] + str(int(now_date[11:13])-1) + now_date[13:], "정보과학관", 0, "blog.naver.com/dongjaksaran"])
+            print(f"[S_getMsgData] SUCCESS loading {{mid: {index}, send_date: {send_date}, msg: {msg}, send_location : {send_location}, sender: {sender}, disaster: {disasterType}}} ({len(msgList)})")
             lastMID = index + 1
             print(f"!!!{index}번 재난문자 성공!!!")
         index += 1
@@ -151,8 +150,10 @@ def getMsgData():
 
     # 추출한 재난문자가 있다면 AlertMsg.AM에 저장
     if len(msgList) > 0:
-        saveMsg2DB(msgList)
+        saveMsg2DB(msgList, pdList)
         # saveMsg2CSV(msgList)
         print(f"!!!재난문자{len(msgList)}개 저장 완료({lastMID})!!!")
+        print(f"!!!실패 리스트 : {failList}")
         msgList.clear()
 
+# getMsgData()
