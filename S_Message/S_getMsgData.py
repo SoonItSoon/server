@@ -3,7 +3,7 @@
 # Module       : S_getMsgData
 # Purpose      : 국민재난안전포털에서 서버에 업데이트되지 않은 재난문자를 가져온다. 
 #                발송된 재난문자가 있다면, S_labelMsgData를 호출한다. 
-# Final Update : 2020-12-04
+# Final Update : 2020-12-05
 ####################################
 
 from selenium import webdriver
@@ -46,8 +46,15 @@ def getLastMID():
 def getSender(msg):
     search = re.search("\[(.+?)\]", msg)
     if search:
-        sender = search.group(1).split(",")[0]
-        sender = re.sub("[0-9\[\- ]", "", sender)
+        sender = search.group(1).split(",")[0].split()[0]
+        sender = re.sub("[0-9①-⑮\[\- ]", "", sender)
+        temp = sender.split("(")
+        if len(temp[0]) > 0:
+            sender = temp[0]
+        elif len(temp) > 1:
+            sender = temp[1]
+        else:
+            sender = ""
     else:
         sender = ""
     return sender
