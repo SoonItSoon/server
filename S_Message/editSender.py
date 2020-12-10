@@ -4,8 +4,8 @@ import csv
 import re
 from operator import itemgetter
 
-CSV_FILE = "AMdata2.csv"
-SAVE_FILE = "AMdata.csv"
+CSV_FILE = "AM_csv.csv"
+SAVE_FILE = "AM_csv_new.csv"
 
 def getSender(msg):
     search = re.search("\[(.+?)\]", msg)
