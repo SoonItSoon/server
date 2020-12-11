@@ -4,7 +4,7 @@
 # Purpose      : 모바일 어플리케이션이나 웹 서버에서 보낸 HTTP Method를 분석하고
 #                이에 맞는 데이터베이스 쿼리를 작성하여
 #                AlertMsgDB나 DisasterDB에서 정보를 가져와 json 형태로 출력한다.
-# Final Update : 2020-12-04
+# Final Update : 2020-12-11
 ####################################
 
 from flask import Flask, render_template, request, Response
