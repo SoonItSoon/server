@@ -30,7 +30,7 @@ chrome_options.add_argument('lang=ko_KR')
 
 # csv 파일에서 
 def getLastMID():
-    return 72226
+    return 72166
     global CSV_FILE
     file = open("alertMsgData.csv", "r", encoding="utf-8")
     reader = csv.reader(file)
@@ -141,12 +141,13 @@ def getMsgData():
             msg = context[0].replace("\n", " ")
             send_location = context[1].replace("\n", ",")
             sender = getSender(msg)
-            disasterType = 0
+            disasterType = 1
             # 재난문자 데이터 임시 저장
             now_date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
             log_default = f"{now_date} [S_getMsgData]"
             # mid, send_date, msg, send_location, sender, disaster
             msgList.append([index, send_date, msg, send_location, sender, disasterType])
+            pdList.append([index, "COVID-19", 1, 1, "2020-12-01 00:00:00", now_date, "정보과학관", 0, "naver.com"])
             print(f"{log_default} SUCCESS loading {{mid: {index}, send_date: {send_date}, msg: {msg}, send_location : {send_location}, sender: {sender}, disaster: {disasterType}}} ({len(msgList)})")
             lastMID = index + 1
         index += 1
