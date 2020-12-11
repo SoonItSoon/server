@@ -16,9 +16,11 @@ from tensorflow.keras.models import load_model
 CSV_FILE = "/home/sslab-hpc/Cap2020/server/S_Message/AM_new_csv.csv"
 
 train_data = pd.read_csv(CSV_FILE, names=["msg", "disaster"], encoding="utf-8")
-train_data.message = train_data.message.astype(str)
+train_data.msg = train_data.msg.astype(str)
 
-train_a = train_data["message"]
+train_a = train_data["msg"]
+
+intent_train = train_a.values.tolist()
 
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(intent_train)
@@ -33,6 +35,9 @@ model = load_model('mnist_mlp_model.h5')
 
 predictions = model.predict(intent_train)
 
+disasterDict = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0}
 for pred in predictions:
-   print(np.argmax(pred))
+    disasterDict[np.argmax(pred)] += 1
+
+print(disasterDict)
 
