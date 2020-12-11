@@ -6,17 +6,19 @@
 # Final Update : 2020-12-11
 ####################################
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import load_model
+import csv
 
 NEW_FILE = "/home/sslab-hpc/Cap2020/server/S_Message/newMsg.csv"
 
 def saveTempCSV(msgList):
     global NEW_FILE
-    file = open(CSV_FILE, mode="w", newline="")
+    file = open(NEW_FILE, mode="w", newline="")
     file.truncate()
 
     writer = csv.writer(file)
@@ -40,16 +42,20 @@ def labelDisaster(msgList):
     max_len = 30
     intent_train = pad_sequences(sequences, maxlen = max_len)
     # print(intent_train[16761])
-    model = load_model('mnist_mlp_model.h5')
+    model = load_model("/home/sslab-hpc/Cap2020/server/S_Message/mnist_mlp_model.h5")
     predictions = model.predict(intent_train)
     disasterDict = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}
     
     disasterList = []
+    i = 0
+    first = 1
     for pred in predictions:
+        if first:
+            first = 0
+            continue
         disasterDict[np.argmax(pred)] += 1
-        print(f"{msgList[pred][2]}")
-    for pred in predictions:
-        disasterDict[np.argmax(pred)] += 1
+        print(f"{msgList[i][2]} : {np.argmax(pred)}")
+        i += 1
         disasterList.append(np.argmax(pred))
     print(disasterDict)
 
