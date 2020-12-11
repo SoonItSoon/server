@@ -7,7 +7,7 @@
 ####################################
 
 from selenium import webdriver
-# import S_Message.S_labelMsgData
+from S_Message.S_labelMsgData import labelMsgData
 import pymysql
 import csv
 import time
@@ -155,7 +155,8 @@ def getMsgData():
 
     # 추출한 재난문자가 있다면 AlertMsg.AM에 저장
     if len(msgList) > 0:
-        saveMsg2DB(msgList, pdList)
+        labelMsgData(msgList)
+        # saveMsg2DB(msgList, pdList)
         # saveMsg2CSV(msgList)
         now_date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
         log_default = f"{now_date} [S_getMsgData]"
