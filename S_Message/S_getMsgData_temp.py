@@ -154,9 +154,26 @@ def getMsgData():
     # 추출한 재난문자가 있다면 AlertMsg.AM에 저장
     if len(msgList) > 0:
         saveMsg2DB(msgList, pdList)
-        # saveMsg2CSV(msgList)
+        saveMsg2CSV(msgList)
         now_date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
         log_default = f"{now_date} [S_getMsgData]"
         print(f"{log_default} {len(msgList)}개 저장 완료 (lastMID:{lastMID}, 실패 리스트:{failList})")
         print(f"!!!실패 리스트 : {failList}")
         msgList.clear()
+
+# 세션의 wait_timeout 무제한 설정
+# DB 접속
+AlertMsgDB = pymysql.connect(
+    user='kyeol',
+    passwd='hee',
+    host='127.0.0.1',
+    db='AlertMsgDB',
+    charset='utf8'
+)
+# wait_timeout 값 31536000초(1년)으로 설정
+insertSQL = "SET wait_timeout=31536000"
+cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
+cursor.executemany(insertSQL)
+AlertMsgDB.commit()
+cursor.close()
+AlertMsgDB.close()

@@ -168,6 +168,113 @@ def search():
     return Response(json.dumps(jsonAll, default=json_default, ensure_ascii=False), content_type="application/json; charset=utf-8");
 
 
+# 재난문자 검색
+@app.route("/count")
+def count():
+    global reqCnt
+    reqCnt += 1
+    # 성능 측정 및 로그용 시간
+    start_time = time.time()
+    # 현재 시각
+    now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
+    # AlertMsgDB 접근 변수
+    AlertMsgDB = pymysql.connect(
+        user='kyeol',
+        passwd='hee',
+        host='127.0.0.1',
+        db='AlertMsgDB',
+        charset='utf8'
+    )
+    AlertMsgDB_cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
+    # 시작 날짜
+    start_date = request.args.get("start_date")
+    # 종료 날짜 (default : 현재 시각)
+    end_date = request.args.get("end_date")
+    if not end_date:
+        end_date = now_date
+    # 시/도, 시/군/구 (default : 전체)
+    main_location = request.args.get("main_location")
+    sub_location = request.args.get("sub_location")
+    # 재난 구분 (전염병(1) 지진(2) 미세먼지(3) 태풍(4) 홍수(5) 폭염(6) 한파(7) 호우(8) 대설(9))
+    disaster = int(request.args.get("disaster"))
+    # 등급 (재난별 등급은 levelDict 참조)
+    level = request.args.get("level")
+    levels = ""
+    req_levels = level.split(",")
+    for req_level in req_levels:
+        levels += levelDict[disaster][int(req_level)] + " "
+
+    # AM 테이블 쿼리
+    sql_AMall = f"SELECT * FROM AM WHERE (send_date BETWEEN '{start_date}' AND '{end_date}') AND disaster = {disaster}"
+    if sub_location == "전체":
+        sql_AMloc = f"{sql_AMall} AND (send_location LIKE '%{main_location}%')"
+    else:
+        sql_AMloc = f"{sql_AMall} AND (send_location LIKE '%{main_location} {sub_location}%' OR send_location LIKE '%{main_location} 전체%')"
+    # SQL 쿼리와 로그
+    sql = ""
+    log_default = f"{now_date} [S_sendServerData]"
+    log = f"{log_default} REST Search Request (Request Cnt : {reqCnt})\n"
+
+    # 전염병(1) 태풍(4)
+    if disaster in [1, 4]:
+        # 전염병 이름
+        name = request.args.get("name")
+        if name:
+            sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE name = '{name}' AND level IN ({level})"
+        else:
+            sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE level IN ({level})"
+        log += f"{log_default} disaster : {disasterDict[disaster]} {name}\n{log_default} level : {levels}\n{log_default} date : {start_date} ~ {end_date}\n"
+        if main_location and sub_location:
+            sql = f"SELECT COUNT(*) FROM ({sql_AMloc}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
+            log += f"{log_default} location : {main_location} {sub_location}\n"
+        else:
+            sql = f"SELECT COUNT(*) FROM ({sql_AMall}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
+            log += f"{log_default} location : 전체\n"
+    # 지진(2)
+    elif disaster == 2:
+        # 최소/최대 규모
+        scale_min = float(request.args.get("scale_min"))
+        scale_max = float(request.args.get("scale_max"))
+        # 관측 위치
+        obs_location = request.args.get("obs_location")
+
+        sql_EQ = f"SELECT * FROM EQ WHERE level IN ({level}) AND (scale BETWEEN {scale_min} AND {scale_max} OR scale IS NULL)"
+        log += f"{log_default} disaster : {disasterDict[disaster]}\n{log_default} level : {levels}\n{log_default} date : {start_date} ~ {end_date}\n"
+        if main_location and sub_location:
+            sql = f"SELECT COUNT(*) FROM ({sql_AMloc}) AS AM JOIN ({sql_EQ}) AS EQ USING (mid)"
+            log += f"{log_default} location : {main_location} {sub_location}\n"
+        else:
+            sql = f"SELECT COUNT(*) FROM ({sql_AMall}) AS AM JOIN ({sql_EQ}) AS EQ USING (mid)"
+            log += f"{log_default} location : 전체\n"
+        if obs_location:
+            sql += f" WHERE EQ.obs_location = '{obs_location}' OR EQ.obs_location IS NULL"
+            log += f"{log_default} scale : {scale_min} ~ {scale_max}\n{log_default} obs_location : {obs_location}\n"
+        else:
+            log += f"{log_default} scale : {scale_min} ~ {scale_max}\n{log_default} obs_location : 전체\n"
+    # 미세먼지(3) 홍수(5) 폭염(6) 한파(7) 호우(8) 대설(9)
+    elif disaster in [3, 5, 6, 7, 8, 9]:
+        sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE level IN ({level})"
+        log += f"{log_default} disaster : {disasterDict[disaster]}\n{log_default} level : {levels}\n{log_default} date : {start_date} ~ {end_date}\n"
+        if main_location and sub_location:
+            sql = f"SELECT COUNT(*) FROM ({sql_AMloc}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
+            log += f"{log_default} location : {main_location} {sub_location}\n"
+        else:
+            sql = f"SELECT COUNT(*) FROM ({sql_AMall}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
+            log += f"{log_default} location : 전체\n"
+
+    sql += " ORDER BY AM.mid DESC LIMIT 100;"
+    log += f"{log_default} DB query : {sql}\n"
+    
+    AlertMsgDB_cursor.execute(sql)
+    result = AlertMsgDB_cursor.fetchall()
+    jsonAll = dict(zip(range(1, len(result) + 1), result))
+
+    log += f"{log_default} DB result : {len(result)} results\n"
+    end_time = time.time()
+    log += f"{log_default} Process Time : {(end_time-start_time):.3f}s"
+    print(log)
+    return Response(json.dumps(jsonAll, default=json_default, ensure_ascii=False), content_type="application/json; charset=utf-8");
+
+
 # 서버 run
 app.run(host="203.253.25.184", port=8080)
-
