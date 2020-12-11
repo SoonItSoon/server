@@ -22,14 +22,14 @@ train_a = train_data["msg"]
 
 intent_train = train_a.values.tolist()
 
+print(intent_train[16761])
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(intent_train)
 sequences = tokenizer.texts_to_sequences(intent_train)
-print(intent_train[1])
 
 max_len = 30
 intent_train = pad_sequences(sequences, maxlen = max_len)
-print(intent_train[1])
+print(intent_train[16761])
 
 model = load_model('mnist_mlp_model.h5')
 

@@ -200,9 +200,10 @@ def count():
     # 등급 (재난별 등급은 levelDict 참조)
     level = request.args.get("level")
     levels = ""
-    req_levels = level.split(",")
-    for req_level in req_levels:
-        levels += levelDict[disaster][int(req_level)] + " "
+    if level:
+        req_levels = level.split(",")
+        for req_level in req_levels:
+            levels += levelDict[disaster][int(req_level)] + " "
 
     # AM 테이블 쿼리
     sql_AMall = f"SELECT * FROM AM WHERE (send_date BETWEEN '{start_date}' AND '{end_date}') AND disaster = {disaster}"
@@ -214,9 +215,10 @@ def count():
     sql = ""
     log_default = f"{now_date} [S_sendServerData]"
     log = f"{log_default} REST Search Request (Request Cnt : {reqCnt})\n"
-
+    if disaster == 0:
+        sql = f"SELECT COUNT(*) FROM AM WHERE send_date BETWEEN '{start_date}' AND '{end_date}'"
     # 전염병(1) 태풍(4)
-    if disaster in [1, 4]:
+    elif disaster in [1, 4]:
         # 전염병 이름
         name = request.args.get("name")
         if name:
@@ -261,8 +263,8 @@ def count():
         else:
             sql = f"SELECT COUNT(*) FROM ({sql_AMall}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
             log += f"{log_default} location : 전체\n"
-
-    sql += " ORDER BY AM.mid DESC LIMIT 100;"
+    if disaster != 0:
+        sql += " ORDER BY AM.mid DESC LIMIT 100;"
     log += f"{log_default} DB query : {sql}\n"
     
     AlertMsgDB_cursor.execute(sql)

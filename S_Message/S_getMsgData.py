@@ -7,7 +7,7 @@
 ####################################
 
 from selenium import webdriver
-import S_Message.S_labelMsgData
+# import S_Message.S_labelMsgData
 import pymysql
 import csv
 import time
@@ -30,6 +30,7 @@ chrome_options.add_argument('lang=ko_KR')
 
 # csv 파일에서 
 def getLastMID():
+    return 72226
     global CSV_FILE
     file = open("alertMsgData.csv", "r", encoding="utf-8")
     reader = csv.reader(file)
