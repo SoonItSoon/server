@@ -30,7 +30,7 @@ chrome_options.add_argument('lang=ko_KR')
 
 # csv 파일에서 
 def getLastMID():
-    return 72300
+    return 72484
     global CSV_FILE
     file = open("alertMsgData.csv", "r", encoding="utf-8")
     reader = csv.reader(file)
@@ -73,13 +73,17 @@ def saveMsg2DB(msgList, pdList):
     # mid, send_date, msg, send_location, sender, disaster
     insertSQL = "INSERT INTO AM VALUES (%s, %s, %s, %s, %s, %s)"
     cursor = AlertMsgDB.cursor(pymysql.cursors.DictCursor)
-    cursor.executemany(insertSQL, msgList)
-    AlertMsgDB.commit()
-    insertSQL = "INSERT INTO PD VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-    cursor.executemany(insertSQL, pdList)
-    AlertMsgDB.commit()
-    cursor.close()
-    AlertMsgDB.close()
+    try:
+        cursor.executemany(insertSQL, msgList)
+        AlertMsgDB.commit()
+        insertSQL = "INSERT INTO PD VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        cursor.executemany(insertSQL, pdList)
+        AlertMsgDB.commit()
+    except Exception as e:
+        print("Error Occured : ", e)
+    finally:
+        cursor.close()
+        AlertMsgDB.close()
 
 
 def saveMsg2CSV(msgList):
@@ -156,7 +160,7 @@ def getMsgData():
     # 추출한 재난문자가 있다면 AlertMsg.AM에 저장
     if len(msgList) > 0:
         labelMsgData(msgList)
-        # saveMsg2DB(msgList, pdList)
+        saveMsg2DB(msgList, pdList)
         # saveMsg2CSV(msgList)
         now_date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
         log_default = f"{now_date} [S_getMsgData]"

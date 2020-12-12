@@ -15,6 +15,7 @@ from tensorflow.keras.models import load_model
 import csv
 
 NEW_FILE = "/home/sslab-hpc/Cap2020/server/S_Message/newMsg.csv"
+model = load_model("/home/sslab-hpc/Cap2020/server/S_Message/mnist_mlp_model.h5")
 
 def saveTempCSV(msgList):
     global NEW_FILE
@@ -42,6 +43,7 @@ def labelDisaster(msgList):
     max_len = 30
     intent_train = pad_sequences(sequences, maxlen = max_len)
     # print(intent_train[16761])
+    global model
     model = load_model("/home/sslab-hpc/Cap2020/server/S_Message/mnist_mlp_model.h5")
     predictions = model.predict(intent_train)
     disasterDict = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}
