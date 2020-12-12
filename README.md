@@ -10,3 +10,5 @@ SoonItSoon Server
 ## Module
 - S_Server.S_sendServerData
 - S_Background.S_mainBackground
+- S_Message.S_getMsgData
+- S_Message.S_labelMsgData
