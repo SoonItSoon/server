@@ -10,10 +10,10 @@
 ####################################
 
 # S_Background.S_mainBackground 모듈
-import S_Background.S_mainBackground
+# import S_Background.S_mainBackground
 
 # S_Server.S_sendServerData 모듈
 import S_Server.S_sendServerData
 
 # S_Message.S_getMsgData 모듈
-import S_Message.S_getMsgData
+# import S_Message.S_getMsgData

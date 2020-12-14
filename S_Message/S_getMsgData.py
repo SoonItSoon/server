@@ -30,7 +30,7 @@ chrome_options.add_argument('lang=ko_KR')
 
 # csv 파일에서 
 def getLastMID():
-    return 72484
+    return 73016
     global CSV_FILE
     file = open("alertMsgData.csv", "r", encoding="utf-8")
     reader = csv.reader(file)
@@ -98,6 +98,7 @@ def saveMsg2CSV(msgList):
 
 
 def getMsgData():
+    start_time = time.time()
     global lastMID
     if lastMID == -1:
         lastMID = getLastMID()
@@ -116,9 +117,9 @@ def getMsgData():
         browser.execute_script("arguments[0].href = arguments[1]", nextBtn, f"javascript:articleDtl('63','{index}');")
         nextBtn.send_keys('\n')
         # 페이지가 로딩 중인 경우를 고려하여 정보가 표시되지 않을 경우 대기 후 재시도
-        sendTime = browser.find_element_by_id("sj").text
-        if len(sendTime) == 0:
-            time.sleep(0.5)
+        # sendTime = browser.find_element_by_id("sj").text
+        # if len(sendTime) == 0:
+        #     time.sleep(0.5)
         sendTime = browser.find_element_by_id("sj").text.split()
 
         global failList
@@ -152,18 +153,21 @@ def getMsgData():
             # mid, send_date, msg, send_location, sender, disaster
             msgList.append([index, send_date, msg, send_location, sender, disasterType])
             pdList.append([index, "COVID-19", 1, 1, "2020-12-01 00:00:00", now_date, "정보과학관", 0, "naver.com"])
-            print(f"{log_default} SUCCESS loading {{mid: {index}, send_date: {send_date}, msg: {msg}, send_location : {send_location}, sender: {sender}, disaster: {disasterType}}} ({len(msgList)})")
+            # print(f"{log_default} SUCCESS loading {{mid: {index}, send_date: {send_date}, msg: {msg}, send_location : {send_location}, sender: {sender}, disaster: {disasterType}}} ({len(msgList)})")
             lastMID = index + 1
         index += 1
     browser.quit()
 
+    end_time = time.time()
+    now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
+    log_default = f"{now_date} [S_getMsgData]"
+    print(f"{log_default} End S_getMsgData (Process Time : {(end_time-start_time):.3f}s)")
     # 추출한 재난문자가 있다면 AlertMsg.AM에 저장
     if len(msgList) > 0:
         labelMsgData(msgList)
         saveMsg2DB(msgList, pdList)
         # saveMsg2CSV(msgList)
         now_date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-        log_default = f"{now_date} [S_getMsgData]"
+        log_default = f"{now_date} [S_labelMsgData]"
         print(f"{log_default} {len(msgList)}개 저장 완료 (lastMID:{lastMID}, 실패 리스트:{failList})")
-        print(f"!!!실패 리스트 : {failList}")
         msgList.clear()

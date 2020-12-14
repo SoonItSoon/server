@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import load_model
-import csv
+import csv, time
 
 NEW_FILE = "/home/sslab-hpc/Cap2020/server/S_Message/newMsg.csv"
 model = load_model("/home/sslab-hpc/Cap2020/server/S_Message/mnist_mlp_model.h5")
@@ -56,7 +56,7 @@ def labelDisaster(msgList):
             first = 0
             continue
         disasterDict[np.argmax(pred)] += 1
-        print(f"{msgList[i][2]} : {np.argmax(pred)}")
+        # print(f"{msgList[i][2]} : {np.argmax(pred)}")
         i += 1
         disasterList.append(np.argmax(pred))
     print(disasterDict)
@@ -65,6 +65,14 @@ def labelDisaster(msgList):
 
 
 def labelMsgData(msgList):
+    start_time = time.time()
+    now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
+    log_default = f"{now_date} [S_labelMsgData]"
+    print(f"{log_default} Start S_labelMsgData")
     saveTempCSV(msgList)
     disasterList = labelDisaster(msgList)
+    end_time = time.time()
+    now_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
+    print(f"{log_default} End S_labelMsgData (Process Time : {(end_time-start_time):.3f}s)")
+
 

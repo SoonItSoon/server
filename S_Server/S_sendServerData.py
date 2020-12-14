@@ -111,13 +111,13 @@ def search():
             sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE name = '{name}' AND level IN ({level})"
         else:
             sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE level IN ({level})"
-        log += f"{log_default} disaster : {disasterDict[disaster]} {name}\n{log_default} level : {levels}\n{log_default} date : {start_date} ~ {end_date}\n"
+        log += f"{log_default} disaster : {disasterDict[disaster]} {name} | level : {levels} | date : {start_date} ~ {end_date} | "
         if main_location and sub_location:
             sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
-            log += f"{log_default} location : {main_location} {sub_location}\n"
+            log += f"location : {main_location} {sub_location} | "
         else:
             sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
-            log += f"{log_default} location : 전체\n"
+            log += f"location : 전체 | "
     # 지진(2)
     elif disaster == 2:
         # 최소/최대 규모
@@ -127,33 +127,33 @@ def search():
         obs_location = request.args.get("obs_location")
 
         sql_EQ = f"SELECT * FROM EQ WHERE level IN ({level}) AND (scale BETWEEN {scale_min} AND {scale_max} OR scale IS NULL)"
-        log += f"{log_default} disaster : {disasterDict[disaster]}\n{log_default} level : {levels}\n{log_default} date : {start_date} ~ {end_date}\n"
+        log += f"{log_default} disaster : {disasterDict[disaster]} | level : {levels} | date : {start_date} ~ {end_date} | "
         if main_location and sub_location:
             sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_EQ}) AS EQ USING (mid)"
-            log += f"{log_default} location : {main_location} {sub_location}\n"
+            log += f"location : {main_location} {sub_location} | "
         else:
             sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_EQ}) AS EQ USING (mid)"
-            log += f"{log_default} location : 전체\n"
+            log += f"location : 전체 | "
         if obs_location:
             sql += f" WHERE EQ.obs_location = '{obs_location}' OR EQ.obs_location IS NULL"
-            log += f"{log_default} scale : {scale_min} ~ {scale_max}\n{log_default} obs_location : {obs_location}\n"
+            log += f"scale : {scale_min} ~ {scale_max} | obs_location : {obs_location} | "
         else:
-            log += f"{log_default} scale : {scale_min} ~ {scale_max}\n{log_default} obs_location : 전체\n"
+            log += f"scale : {scale_min} ~ {scale_max} | obs_location : 전체 | "
     # 미세먼지(3) 홍수(5) 폭염(6) 한파(7) 호우(8) 대설(9)
     elif disaster in [3, 5, 6, 7, 8, 9]:
         sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE level IN ({level})"
-        log += f"{log_default} disaster : {disasterDict[disaster]}\n{log_default} level : {levels}\n{log_default} date : {start_date} ~ {end_date}\n"
+        log += f"{log_default} disaster : {disasterDict[disaster]} | level : {levels} | date : {start_date} ~ {end_date} | "
         if main_location and sub_location:
             sql = f"SELECT * FROM ({sql_AMloc}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
-            log += f"{log_default} location : {main_location} {sub_location}\n"
+            log += f"location : {main_location} {sub_location} | "
         else:
             sql = f"SELECT * FROM ({sql_AMall}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
-            log += f"{log_default} location : 전체\n"
+            log += f"location : 전체 | "
     
     if inner_text:
-        log += f"{log_default} inner_text : {inner_text}\n"
+        log += f"inner_text : {inner_text}\n"
     else:
-        log += f"{log_default} inner_text : none\n"
+        log += f"inner_text : none\n"
     sql += " ORDER BY AM.mid DESC LIMIT 100;"
     log += f"{log_default} DB query : {sql}\n"
     
@@ -161,9 +161,9 @@ def search():
     result = AlertMsgDB_cursor.fetchall()
     jsonAll = dict(zip(range(1, len(result) + 1), result))
 
-    log += f"{log_default} DB result : {len(result)} results\n"
+    log += f"{log_default} DB result : {len(result)} results | "
     end_time = time.time()
-    log += f"{log_default} Process Time : {(end_time-start_time):.3f}s"
+    log += f"Process Time : {(end_time-start_time):.3f}s"
     print(log)
     return Response(json.dumps(jsonAll, default=json_default, ensure_ascii=False), content_type="application/json; charset=utf-8");
 
@@ -214,7 +214,7 @@ def count():
     # SQL 쿼리와 로그
     sql = ""
     log_default = f"{now_date} [S_sendServerData]"
-    log = f"{log_default} REST Search Request (Request Cnt : {reqCnt})\n"
+    log = f"{log_default} REST Count Request (Request Cnt : {reqCnt})\n"
     if disaster == 0:
         sql = f"SELECT COUNT(*) FROM AM WHERE send_date BETWEEN '{start_date}' AND '{end_date}'"
     # 전염병(1) 태풍(4)
@@ -225,13 +225,13 @@ def count():
             sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE name = '{name}' AND level IN ({level})"
         else:
             sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE level IN ({level})"
-        log += f"{log_default} disaster : {disasterDict[disaster]} {name}\n{log_default} level : {levels}\n{log_default} date : {start_date} ~ {end_date}\n"
+        log += f"{log_default} disaster : {disasterDict[disaster]} {name} | level : {levels} | date : {start_date} ~ {end_date} | "
         if main_location and sub_location:
             sql = f"SELECT COUNT(*) FROM ({sql_AMloc}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
-            log += f"{log_default} location : {main_location} {sub_location}\n"
+            log += f"location : {main_location} {sub_location}\n"
         else:
             sql = f"SELECT COUNT(*) FROM ({sql_AMall}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
-            log += f"{log_default} location : 전체\n"
+            log += f"location : 전체\n"
     # 지진(2)
     elif disaster == 2:
         # 최소/최대 규모
@@ -241,28 +241,28 @@ def count():
         obs_location = request.args.get("obs_location")
 
         sql_EQ = f"SELECT * FROM EQ WHERE level IN ({level}) AND (scale BETWEEN {scale_min} AND {scale_max} OR scale IS NULL)"
-        log += f"{log_default} disaster : {disasterDict[disaster]}\n{log_default} level : {levels}\n{log_default} date : {start_date} ~ {end_date}\n"
+        log += f"{log_default} disaster : {disasterDict[disaster]} | level : {levels} | date : {start_date} ~ {end_date} | "
         if main_location and sub_location:
             sql = f"SELECT COUNT(*) FROM ({sql_AMloc}) AS AM JOIN ({sql_EQ}) AS EQ USING (mid)"
-            log += f"{log_default} location : {main_location} {sub_location}\n"
+            log += f"location : {main_location} {sub_location} | "
         else:
             sql = f"SELECT COUNT(*) FROM ({sql_AMall}) AS AM JOIN ({sql_EQ}) AS EQ USING (mid)"
-            log += f"{log_default} location : 전체\n"
+            log += f"location : 전체 | "
         if obs_location:
             sql += f" WHERE EQ.obs_location = '{obs_location}' OR EQ.obs_location IS NULL"
-            log += f"{log_default} scale : {scale_min} ~ {scale_max}\n{log_default} obs_location : {obs_location}\n"
+            log += f"scale : {scale_min} ~ {scale_max} | obs_location : {obs_location}\n"
         else:
-            log += f"{log_default} scale : {scale_min} ~ {scale_max}\n{log_default} obs_location : 전체\n"
+            log += f"scale : {scale_min} ~ {scale_max} | obs_location : 전체\n"
     # 미세먼지(3) 홍수(5) 폭염(6) 한파(7) 호우(8) 대설(9)
     elif disaster in [3, 5, 6, 7, 8, 9]:
         sql_multi = f"SELECT * FROM {AlertMsgDBDict[disaster]} WHERE level IN ({level})"
-        log += f"{log_default} disaster : {disasterDict[disaster]}\n{log_default} level : {levels}\n{log_default} date : {start_date} ~ {end_date}\n"
+        log += f"{log_default} disaster : {disasterDict[disaster]} | level : {levels} | date : {start_date} ~ {end_date} | "
         if main_location and sub_location:
             sql = f"SELECT COUNT(*) FROM ({sql_AMloc}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
-            log += f"{log_default} location : {main_location} {sub_location}\n"
+            log += f"location : {main_location} {sub_location}\n"
         else:
             sql = f"SELECT COUNT(*) FROM ({sql_AMall}) AS AM JOIN ({sql_multi}) AS {AlertMsgDBDict[disaster]} USING (mid)"
-            log += f"{log_default} location : 전체\n"
+            log += f"location : 전체\n"
     if disaster != 0:
         sql += " ORDER BY AM.mid DESC LIMIT 100;"
     log += f"{log_default} DB query : {sql}\n"
@@ -271,9 +271,9 @@ def count():
     result = AlertMsgDB_cursor.fetchall()
     jsonAll = dict(zip(range(1, len(result) + 1), result))
 
-    log += f"{log_default} DB result : {len(result)} results\n"
+    log += f"{log_default} DB result : {len(result)} results | "
     end_time = time.time()
-    log += f"{log_default} Process Time : {(end_time-start_time):.3f}s"
+    log += f"Process Time : {(end_time-start_time):.3f}s"
     print(log)
     return Response(json.dumps(jsonAll, default=json_default, ensure_ascii=False), content_type="application/json; charset=utf-8");
 
