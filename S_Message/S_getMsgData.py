@@ -24,13 +24,15 @@ URL = "http://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgView.jsp
 
 # webdriver 설정
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('headless')
-chrome_options.add_argument('--disable-gpu')
+chrome_options.add_argument('--headless')
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-dev-shm-usage')
+# chrome_options.add_argument('--disable-gpu')
 chrome_options.add_argument('lang=ko_KR')
 
 # csv 파일에서 
 def getLastMID():
-    return 73016
+    return 73399
     global CSV_FILE
     file = open("alertMsgData.csv", "r", encoding="utf-8")
     reader = csv.reader(file)
@@ -105,7 +107,7 @@ def getMsgData():
     index = lastMID
     # 브라우저 생성
     global chrome_options
-    browser = webdriver.Chrome(executable_path="/home/sslab-hpc/Cap2020/server/S_Message/chromedriver", options=chrome_options)
+    browser = webdriver.Chrome(executable_path="/home/sslab-hpc/Cap2020/server/S_Message/chromedriver", chrome_options=chrome_options)
     browser.get(URL)
     # 재난문자를 임시 저장하는 list
     msgList = []
@@ -153,7 +155,7 @@ def getMsgData():
             # mid, send_date, msg, send_location, sender, disaster
             msgList.append([index, send_date, msg, send_location, sender, disasterType])
             pdList.append([index, "COVID-19", 1, 1, "2020-12-01 00:00:00", now_date, "정보과학관", 0, "naver.com"])
-            # print(f"{log_default} SUCCESS loading {{mid: {index}, send_date: {send_date}, msg: {msg}, send_location : {send_location}, sender: {sender}, disaster: {disasterType}}} ({len(msgList)})")
+            print(f"{log_default} SUCCESS loading {{mid: {index}, send_date: {send_date}, msg: {msg}, send_location : {send_location}, sender: {sender}, disaster: {disasterType}}} ({len(msgList)})")
             lastMID = index + 1
         index += 1
     browser.quit()
