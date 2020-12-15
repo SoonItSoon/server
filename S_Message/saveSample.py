@@ -14,7 +14,10 @@ for line in reader:
     amList.append([int(line[0]), line[1], line[2], line[3], line[4], int(line[5])])
     if line[5] == '1':
         print(line[0], line[2])
-        pdList.append([int(line[0]), line[6], int(line[7]), int(line[8]), line[9], line[10], line[11], int(line[12]), line[13]])
+        if line[7] == 1:
+            pdList.append([int(line[0]), line[6], int(line[7]), int(line[8]), line[9], line[10], line[11], int(line[12]), line[13]])
+        else:
+            pdList.append([int(line[0]), line[6], int(line[7]), int(line[8]), None, None, line[11], int(line[12]), line[13]])
     elif line[5] == '2':
         print(line[0], line[2])
         eqList.append([int(line[0]), int(line[7]), line[14], line[15], line[16], float(line[17])])
