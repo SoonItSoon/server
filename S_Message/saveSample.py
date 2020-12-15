@@ -20,7 +20,10 @@ for line in reader:
             pdList.append([int(line[0]), line[6], int(line[7]), int(line[8]), None, None, line[11], int(line[12]), line[13]])
     elif line[5] == '2':
         print(line[0], line[2])
-        eqList.append([int(line[0]), int(line[7]), line[14], line[15], line[16], float(line[17])])
+        if line[7] == 1:
+            eqList.append([int(line[0]), int(line[7]), line[14], line[15], line[16], float(line[17])])
+        else:
+            eqList.append([int(line[0]), int(line[7]), None, line[15], line[16], 0.0])
 
 AlertMsgDB = pymysql.connect(
         user='kyeol',
