@@ -1,13 +1,13 @@
 import pymysql
 import csv
 
-CSV_FILE = "DB_sample.csv"
+CSV_FILE = "DB_sample2.csv"
 
 amList = []
 pdList = []
 eqList = []
 
-file = open(CSV_FILE, "r", encoding="utf-8")
+file = open(CSV_FILE, "r", encoding="utf-8-sig")
 reader = csv.reader(file)
 
 for line in reader:
@@ -17,7 +17,7 @@ for line in reader:
         pdList.append([int(line[0]), line[6], int(line[7]), int(line[8]), line[9], line[10], line[11], int(line[12]), line[13]])
     elif line[5] == '2':
         print(line[0], line[2])
-        eqList.append([int(line[0]), int(line[7]), line[14], line[15], line[16], float(line[17]]))
+        eqList.append([int(line[0]), int(line[7]), line[14], line[15], line[16], float(line[17])])
 
 AlertMsgDB = pymysql.connect(
         user='kyeol',
@@ -38,4 +38,4 @@ insertSQL = "INSERT INTO EQ VALUES (%s, %s, %s, %s, %s, %s)"
 cursor.executemany(insertSQL, eqList)
 AlertMsgDB.commit()
 cursor.close()
-# AlertMsgDB.close()
+AlertMsgDB.close()
