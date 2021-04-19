@@ -165,8 +165,9 @@ def search():
     end_time = time.time()
     log += f"Process Time : {(end_time-start_time):.3f}s"
     print(log)
-    return Response(json.dumps(jsonAll, default=json_default, ensure_ascii=False), content_type="application/json; charset=utf-8");
-
+    res = Response(json.dumps(jsonAll, default=json_default, ensure_ascii=False), content_type="application/json; charset=utf-8");
+    res.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
+    return res
 
 # 재난문자 검색
 @app.route("/count")
